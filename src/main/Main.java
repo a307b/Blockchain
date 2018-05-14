@@ -10,6 +10,9 @@ public class Main
 
     public static void main(String[] args)
     {
+        Blockchain.start();
+
+
         try
         {
             ServerSocket serverSocket = new ServerSocket(port);
@@ -32,9 +35,9 @@ public class Main
     private static void handleConnection(Socket socket)
     {
         System.out.println("Connection received!");
-        try (BufferedReader is = new BufferedReader(new InputStreamReader(socket.getInputStream())))
+        try (BufferedReader stream = new BufferedReader(new InputStreamReader(socket.getInputStream())))
         {
-            int opcode = is.read();
+            int opcode = stream.read();
 
             System.out.println("Opcode: " + opcode);
 
