@@ -34,7 +34,7 @@ class Blockchain
                     throw new Exception("Failed parsing blockchain line, please revise splitting in line:\n" + line);
 
                 Block block = new Block();
-                block.blockID = splitLinesList.get(0);
+                block.id = splitLinesList.get(0);
                 block.patientPublicKey = splitLinesList.get(1);
                 block.encryptedAesKey = splitLinesList.get(2);
                 block.encryptedData = splitLinesList.get(3);
@@ -53,7 +53,7 @@ class Blockchain
         }
     }
 
-    static void addBlock()
+    static void addBlock(String string)
     {
         try
         {

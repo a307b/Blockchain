@@ -1,6 +1,6 @@
 public class Block
 {
-    String blockID;
+    String id;
     String patientPublicKey;
     String encryptedAesKey;
     String encryptedData;

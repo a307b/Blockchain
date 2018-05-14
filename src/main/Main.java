@@ -59,10 +59,7 @@ public class Main
                     bw.write(blockList.size());
                     for (Block block : blockList)
                     {
-                        bw.write(block.blockID);
-                        bw.newLine();
-
-                        bw.write(block.encryptedAesKey);
+                        bw.write(block.id);
                         bw.newLine();
 
                         bw.write(block.encryptedData);
