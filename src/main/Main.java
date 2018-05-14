@@ -1,8 +1,8 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main
 {
@@ -11,12 +11,11 @@ public class Main
     public static void main(String[] args)
     {
         Blockchain.start();
-
+        //Blockchain.addBlock();
 
         try
         {
             ServerSocket serverSocket = new ServerSocket(port);
-            System.out.println("Blockchain initialized");
             while(true)
             {
                 System.out.println("Awaiting connection...");
@@ -29,29 +28,57 @@ public class Main
         {
             System.out.println(e.getMessage());
         }
-
     }
 
     private static void handleConnection(Socket socket)
     {
         System.out.println("Connection received!");
-        try (BufferedReader stream = new BufferedReader(new InputStreamReader(socket.getInputStream())))
+        try
         {
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            BufferedReader stream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+
             int opcode = stream.read();
 
             System.out.println("Opcode: " + opcode);
 
             switch (opcode)
             {
-                case 1:
+                case 0:
+                    String publicKey = stream.readLine();
+
+                    List<Block> blockList = new ArrayList<>();
+
+                    for (Block block : Blockchain.getBlockChain())
+                    {
+                        if (block.patientPublicKey.equals(publicKey))
+                            blockList.add(block);
+                    }
+
+                    bw.write(blockList.size());
+                    for (Block block : blockList)
+                    {
+                        bw.write(block.blockID);
+                        bw.newLine();
+
+                        bw.write(block.encryptedAesKey);
+                        bw.newLine();
+
+                        bw.write(block.encryptedData);
+                        bw.newLine();
+                    }
+
+                    bw.flush();
+
                     System.out.println("Get journals using the public key from the packet. Used by doctors");
                     break;
 
-                case 2:
+                case 1:
                     System.out.println("Create new block using written journal data. Used by doctors");
                     break;
 
-                case 3:
+                case 2:
                     System.out.println("List latest journal. Used by the citizen");
                     break;
 
