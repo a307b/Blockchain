@@ -5,10 +5,10 @@ import java.util.List;
 
 class Blockchain
 {
-    static List<Block> blockChain = new ArrayList<>();
-    static BufferedReader blockchainReader;
-    static FileWriter blockchainWriter;
-    static String blockchainFile = "blockchain";
+    private static List<Block> blockChain = new ArrayList<>();
+    private static BufferedReader blockchainReader;
+    private static FileWriter blockchainWriter;
+    private static String blockchainFile = "blockchain";
 
     public static List<Block> getBlockChain()
     {

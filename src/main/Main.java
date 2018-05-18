@@ -11,7 +11,6 @@ public class Main
     public static void main(String[] args)
     {
         Blockchain.start();
-        //Blockchain.addBlock();
 
         try
         {
@@ -37,7 +36,6 @@ public class Main
         {
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             BufferedReader stream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
 
             int opcode = stream.read();
 
@@ -65,14 +63,15 @@ public class Main
                         bw.write(block.encryptedData);
                         bw.newLine();
                     }
-
                     bw.flush();
 
-                    System.out.println("Get journals using the public key from the packet. Used by doctors");
+                    // System.out.println("Get journals using the public key from the packet. Used by doctors");
                     break;
 
                 case 1:
-                    System.out.println("Create new block using written journal data. Used by doctors");
+
+
+                    // System.out.println("Create new block using written journal data. Used by doctors");
                     break;
 
                 case 2:
