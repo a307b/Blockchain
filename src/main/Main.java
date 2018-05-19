@@ -128,12 +128,17 @@ public class Main
                     catch (Exception e)
                     {
                         System.out.println(e.getMessage());
+                        bw.write(0);
                     }
 
                     if (!verified)
+                    {
+                        bw.write(0);
                         return; // Signature could not be verified
+                    }
 
-                    String blockId;
+
+                    String blockId = "";
 
                     try
                     {
@@ -141,27 +146,33 @@ public class Main
 
                         if (latestPatientBlockId.equals(""))
                         {
-                            byte[] hash = digest.digest(patientPublicKey.getBytes());
+                            blockId = Base64.getEncoder().encodeToString(digest.digest(patientPublicKey.getBytes()));
                         }
                         else
                         {
-                            byte[] hash = digest.digest((latestPatientBlockId+patientPublicKey).getBytes());
+                            blockId = Base64.getEncoder().encodeToString(digest.digest((latestPatientBlockId+patientPublicKey).getBytes()));
                         }
                     }
                     catch (Exception e)
                     {
                         System.out.println(e.getMessage());
+                        bw.write(0);
                     }
 
 
-
                     Block block = new Block();
-                    block.id = "";
+                    block.id = blockId;
                     block.patientPublicKey = patientPublicKey;
                     block.encryptedAesKey = encryptedAesKeyIV;
                     block.encryptedData = encryptedJournalData;
 
-                    // System.out.println("Create new block using written journal data. Used by doctors");
+                    Blockchain.getBlockChain().add(block);
+                    System.out.println("Succesfully added block");
+
+                    bw.write(1);
+                    bw.write(blockId);
+                    bw.newLine();
+                    bw.flush();
                     break;
 
                 case 2:

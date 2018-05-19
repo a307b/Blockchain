@@ -4,7 +4,7 @@ class BlockchainTest{
     @Test
     void addBlock() {
         Blockchain blockchain = new Blockchain();
-        blockchain.setBlockchainFile("blockChainTests\\testBlockchain");
+        //blockchain.setBlockchainFile("blockChainTests\\testBlockchain");
         blockchain.addBlock("Hello world");
     }
 }
