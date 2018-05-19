@@ -24,6 +24,9 @@ class Blockchain
         {
             blockchainReader = new BufferedReader(new FileReader(blockchainFile));
 
+            /* Reads the blockchain file. Each line is read as block with different properties divided by semi colon.
+               After an blocks properties has been identified it is added to the blockchain. */
+
             // Create the blocks and add them to the list
             String line;
             while ((line = blockchainReader.readLine()) != null)
@@ -58,7 +61,7 @@ class Blockchain
         try
         {
             blockchainWriter = new FileWriter(blockchainFile,true); //the true will append the new data
-            blockchainWriter.write("add a line\n");//appends the string to the file
+            blockchainWriter.write(string + "\n");//appends the string to the file
             blockchainWriter.close();
         }
         catch(Exception e)

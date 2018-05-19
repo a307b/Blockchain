@@ -47,6 +47,8 @@ public class Main
                     String publicKey = stream.readLine();
 
                     List<Block> blockList = new ArrayList<>();
+                    /* If the received public key matches any of the blocks in the blockchain, add
+                     * the block to blockList */
 
                     for (Block block : Blockchain.getBlockChain())
                     {
@@ -54,6 +56,7 @@ public class Main
                             blockList.add(block);
                     }
 
+                    /* Sends the list of blocks that corresponds to the received public key back to the client */
                     bw.write(blockList.size());
                     for (Block block : blockList)
                     {
