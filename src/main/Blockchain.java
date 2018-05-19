@@ -69,4 +69,8 @@ class Blockchain
             System.err.println("Exception: " + e.getMessage());
         }
     }
+
+    public static void setBlockchainFile(String blockchainFile) {
+        Blockchain.blockchainFile = blockchainFile;
+    }
 }
