@@ -1,7 +1,11 @@
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.*;
 
 class Blockchain
 {
@@ -9,6 +13,12 @@ class Blockchain
     private static BufferedReader blockchainReader;
     private static FileWriter blockchainWriter;
     private static String blockchainFile = "blockchain";
+    private static List<PublicKey> publicKeyList = new ArrayList<>();
+
+    public static List<PublicKey> getPublicKeyList()
+    {
+        return publicKeyList;
+    }
 
     public static List<Block> getBlockChain()
     {
@@ -17,15 +27,10 @@ class Blockchain
 
     static void start()
     {
-        System.out.println("Begin loading the blockchain database...");
-
         // Begin loading the blockchain
         try
         {
             blockchainReader = new BufferedReader(new FileReader(blockchainFile));
-
-            /* Reads the blockchain file. Each line is read as block with different properties divided by semi colon.
-               After an blocks properties has been identified it is added to the blockchain. */
 
             // Create the blocks and add them to the list
             String line;
@@ -70,7 +75,26 @@ class Blockchain
         }
     }
 
-    public static void setBlockchainFile(String blockchainFile) {
-        Blockchain.blockchainFile = blockchainFile;
+    public static void loadPublicKeys()
+    {
+        try
+        {
+            Scanner scan = new Scanner(new File("publickeys"));
+
+            while (scan.hasNextLine())
+            {
+                String pem = scan.nextLine();
+
+                X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(pem)); // Decode Base64 and create X509EncodedKeySpec
+                KeyFactory keyFactory = KeyFactory.getInstance("RSA"); // Create KeyFactory object to generate RSA PublicKey object
+                PublicKey publicKey = keyFactory.generatePublic(pubKeySpec);
+
+                publicKeyList.add(publicKey); // Add the PublicKey to the ArrayList
+            }
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+        }
     }
 }
