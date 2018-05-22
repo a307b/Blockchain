@@ -1,7 +1,7 @@
 public class Block
 {
     String id;
-    String patientPublicKey;
+    String publicKey;
     String encryptedAesKey;
     String encryptedData;
 }

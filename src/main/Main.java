@@ -45,63 +45,64 @@ public class Main
         System.out.println("Connection received!");
         try
         {
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            BufferedReader stream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-            int opcode = stream.read();
+            BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            Blockchain blockchain = new Blockchain();
+            int opcode = bufferedReader.read();
 
             System.out.println("Opcode: " + opcode);
 
             switch (opcode)
             {
+                /* Request for blockchain data. Sends back blocks from the blockchain. */
                 case 0:
-                    String publicKey = stream.readLine();
+                    String publicKey = bufferedReader.readLine();
 
                     List<Block> blockList = new ArrayList<>();
                     /* If the received public key matches any of the blocks in the blockchain, add
                      * the block to blockList */
-
-                    // Iterate over blockchain and check if received base64 public key matches any of those in the blockchain
-                    // If yes, add them to a list
                     for (Block block : Blockchain.getBlockChain())
                     {
-                        if (block.patientPublicKey.equals(publicKey))
+                        if (block.publicKey.equals(publicKey))
                             blockList.add(block);
                     }
 
                     /* Sends the list of blocks that corresponds to the received public key back to the client */
-                    bw.write(blockList.size());
+                    bufferedWriter.write(blockList.size());
                     for (Block block : blockList)
                     {
-                        bw.write(block.id);
-                        bw.newLine();
+                        bufferedWriter.write(block.id);
+                        bufferedWriter.newLine();
 
-                        bw.write(block.encryptedData);
-                        bw.newLine();
+                        bufferedWriter.write(block.publicKey);
+                        bufferedWriter.newLine();
+
+                        bufferedWriter.write(block.encryptedAesKey);
+                        bufferedWriter.newLine();
+
+                        bufferedWriter.write(block.encryptedData);
+                        bufferedWriter.newLine();
                     }
-                    bw.flush();
+                    bufferedWriter.flush();
 
                     // System.out.println("Get journals using the public key from the packet. Used by doctors");
                     break;
-
+                /* Receive journal data and add it to the blockchain */
                 case 1:
-                    String signedBlock = stream.readLine();
-                    String patientPublicKey = stream.readLine();
-                    String encryptedAesKeyIV = stream.readLine();
-                    String encryptedJournalData = stream.readLine();
+                    String signedBlock = bufferedReader.readLine();
+                    String patientPublicKey = bufferedReader.readLine();
+                    String encryptedAesKeyIV = bufferedReader.readLine();
+                    String encryptedJournalData = bufferedReader.readLine();
 
-
-                    System.out.println(signedBlock);
-                    System.out.println(patientPublicKey);
-                    System.out.println(encryptedAesKeyIV);
-                    System.out.println(encryptedJournalData);
+                    blockchain.addBlock(signedBlock + ":" + patientPublicKey + ":" + encryptedAesKeyIV + ":"
+                                         + encryptedJournalData);
 
                     // Get the last block of the user, to be used by verifier
                     String latestPatientBlockId = "";
                     for (int i = Blockchain.getBlockChain().size() - 1; i >= 0; --i)
                     {
-                        if (Blockchain.getBlockChain().get(i).patientPublicKey.equals(patientPublicKey))
-                            latestPatientBlockId = Blockchain.getBlockChain().get(i).patientPublicKey;
+                        if (Blockchain.getBlockChain().get(i).publicKey.equals(patientPublicKey))
+                            latestPatientBlockId = Blockchain.getBlockChain().get(i).publicKey;
                     }
 
                     boolean verified = false;
@@ -128,12 +129,12 @@ public class Main
                     catch (Exception e)
                     {
                         System.out.println(e.getMessage());
-                        bw.write(0);
+                        bufferedWriter.write(0);
                     }
 
                     if (!verified)
                     {
-                        bw.write(0);
+                        bufferedWriter.write(0);
                         return; // Signature could not be verified
                     }
 
@@ -156,23 +157,23 @@ public class Main
                     catch (Exception e)
                     {
                         System.out.println(e.getMessage());
-                        bw.write(0);
+                        bufferedWriter.write(0);
                     }
 
 
                     Block block = new Block();
                     block.id = blockId;
-                    block.patientPublicKey = patientPublicKey;
+                    block.publicKey = patientPublicKey;
                     block.encryptedAesKey = encryptedAesKeyIV;
                     block.encryptedData = encryptedJournalData;
 
                     Blockchain.getBlockChain().add(block);
                     System.out.println("Succesfully added block");
 
-                    bw.write(1);
-                    bw.write(blockId);
-                    bw.newLine();
-                    bw.flush();
+                    bufferedWriter.write(1);
+                    bufferedWriter.write(blockId);
+                    bufferedWriter.newLine();
+                    bufferedWriter.flush();
                     break;
 
                 case 2:

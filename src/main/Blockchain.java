@@ -43,7 +43,7 @@ class Blockchain
 
                 Block block = new Block();
                 block.id = splitLinesList.get(0);
-                block.patientPublicKey = splitLinesList.get(1);
+                block.publicKey = splitLinesList.get(1);
                 block.encryptedAesKey = splitLinesList.get(2);
                 block.encryptedData = splitLinesList.get(3);
 
