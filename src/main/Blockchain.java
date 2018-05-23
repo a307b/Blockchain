@@ -74,7 +74,8 @@ class Blockchain
             System.err.println("Exception: " + e.getMessage());
         }
     }
-
+/* Overvej at fjerne denne funktion da jeg ikke tror den bruges, siden den returnere 0 public keys, og jeg tror
+ * ikke den er nødvendig */
     public static void loadPublicKeys()
     {
         try
