@@ -74,28 +74,4 @@ class Blockchain
             System.err.println("Exception: " + e.getMessage());
         }
     }
-/* Overvej at fjerne denne funktion da jeg ikke tror den bruges, siden den returnere 0 public keys, og jeg tror
- * ikke den er nødvendig */
-    public static void loadPublicKeys()
-    {
-        try
-        {
-            Scanner scan = new Scanner(new File("publickeys"));
-
-            while (scan.hasNextLine())
-            {
-                String pem = scan.nextLine();
-
-                X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(pem)); // Decode Base64 and create X509EncodedKeySpec
-                KeyFactory keyFactory = KeyFactory.getInstance("RSA"); // Create KeyFactory object to generate RSA PublicKey object
-                PublicKey publicKey = keyFactory.generatePublic(pubKeySpec);
-
-                publicKeyList.add(publicKey); // Add the PublicKey to the ArrayList
-            }
-        }
-        catch (Exception e)
-        {
-            System.out.println(e.getMessage());
-        }
-    }
 }

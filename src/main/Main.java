@@ -15,11 +15,9 @@ public class Main
     public static void main(String[] args)
     {
         System.out.println("Loading valid public keys...");
-        Blockchain.loadPublicKeys();
         System.out.println("Loaded " + Blockchain.getPublicKeyList().size() + " public keys");
 
         System.out.println("Begin loading the blockchain database...");
-
 
         Blockchain.start();
 
@@ -84,8 +82,6 @@ public class Main
                         bufferedWriter.newLine();
                     }
                     bufferedWriter.flush();
-
-                    // System.out.println("Get journals using the public key from the packet. Used by doctors");
                     break;
                 /* Receive journal data and add it to the blockchain */
                 case 1:
@@ -174,10 +170,6 @@ public class Main
                     bufferedWriter.write(blockId);
                     bufferedWriter.newLine();
                     bufferedWriter.flush();
-                    break;
-
-                case 2:
-                    System.out.println("List latest journal. Used by the citizen");
                     break;
 
                 default:
