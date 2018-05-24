@@ -1,3 +1,4 @@
+import org.apache.commons.codec.binary.Base64;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -5,7 +6,6 @@ import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 public class Main
@@ -15,8 +15,7 @@ public class Main
     public static void main(String[] args)
     {
         System.out.println("Loading valid public keys...");
-        System.out.println("Loaded " + Blockchain.getPublicKeyList().size() + " public keys");
-
+        System.out.println("Loaded " + Blockchain.loadAcceptedPublicKeys().size() + " public keys");
         System.out.println("Begin loading the blockchain database...");
 
         Blockchain.start();
@@ -57,11 +56,11 @@ public class Main
                     String publicKey = bufferedReader.readLine();
 
                     List<Block> blockList = new ArrayList<>();
-                    /* If the received public key matches any of the blocks in the blockchain, add
+                    /* If the received patient public key matches any of the blocks in the blockchain, add
                      * the block to blockList */
                     for (Block block : Blockchain.getBlockChain())
                     {
-                        if (block.publicKey.equals(publicKey))
+                        if (block.patientPublicKey.equals(publicKey))
                             blockList.add(block);
                     }
 
@@ -72,7 +71,7 @@ public class Main
                         bufferedWriter.write(block.id);
                         bufferedWriter.newLine();
 
-                        bufferedWriter.write(block.publicKey);
+                        bufferedWriter.write(block.patientPublicKey);
                         bufferedWriter.newLine();
 
                         bufferedWriter.write(block.encryptedAesKey);
@@ -85,38 +84,46 @@ public class Main
                     break;
                 /* Receive journal data and add it to the blockchain */
                 case 1:
-                    String signedBlock = bufferedReader.readLine();
+                    String privateKeySignedBlock = bufferedReader.readLine();
                     String patientPublicKey = bufferedReader.readLine();
                     String encryptedAesKeyIV = bufferedReader.readLine();
                     String encryptedJournalData = bufferedReader.readLine();
 
-                    blockchain.addBlock(signedBlock + ":" + patientPublicKey + ":" + encryptedAesKeyIV + ":"
-                                         + encryptedJournalData);
-
                     // Get the last block of the user, to be used by verifier
-                    String latestPatientBlockId = "";
-                    for (int i = Blockchain.getBlockChain().size() - 1; i >= 0; --i)
+                    String journalBlockID = "";
+                    for (int i = 0; i < Blockchain.getBlockChain().size(); i++)
                     {
-                        if (Blockchain.getBlockChain().get(i).publicKey.equals(patientPublicKey))
-                            latestPatientBlockId = Blockchain.getBlockChain().get(i).publicKey;
+                        if (Blockchain.getBlockChain().get(i).patientPublicKey.equals(patientPublicKey)) {
+                            journalBlockID = Blockchain.getBlockChain().get(i).id;
+                            System.out.println("The user had an previous block. ");
+                            System.out.println("Last block ID: " + Blockchain.getBlockChain().get(i).id);
+                        }
                     }
 
+                    byte[] contentToBeSigned = null;
                     boolean verified = false;
                     try
                     {
                         // This part is known as "block propagation". The riddle is to find the public key belonging to the doctor. If the data cannot be verified, a block
                         // will not be created
-                        for (PublicKey doctorPublicKey : Blockchain.getPublicKeyList())
+                        for (PublicKey acceptedPublicKey : Blockchain.loadAcceptedPublicKeys())
                         {
-                            Signature signature = Signature.getInstance("SHA256WithRSA");
-                            signature.initVerify(doctorPublicKey);
+                            Signature signWithPublicKey = Signature.getInstance("SHA256WithRSA");
+                            signWithPublicKey.initVerify(acceptedPublicKey);
 
-                            if (!latestPatientBlockId.equals(""))
-                                signature.update((latestPatientBlockId+patientPublicKey).getBytes());
-                            else
-                                signature.update(patientPublicKey.getBytes());
+                            /* If the patient had no previous blocks sign the patients public key.
+                             * If the patient had previous blocks sign the public key + previous block
+                              * journalBlockID. */
 
-                            verified = signature.verify(Base64.getDecoder().decode(signedBlock));
+                            if (journalBlockID == null) {
+                                contentToBeSigned = patientPublicKey.getBytes();
+                            }
+                            else {
+                                contentToBeSigned = (journalBlockID + patientPublicKey).getBytes();
+                            }
+
+                            signWithPublicKey.update(contentToBeSigned);
+                            verified = signWithPublicKey.verify(Base64.decodeBase64(privateKeySignedBlock));
 
                             if (verified) // Public key was found, stop iteration
                                 break;
@@ -128,48 +135,16 @@ public class Main
                         bufferedWriter.write(0);
                     }
 
-                    if (!verified)
-                    {
-                        bufferedWriter.write(0);
-                        return; // Signature could not be verified
+                    System.out.println("Verfied: " + verified);
+
+                    if(verified) {
+                        /* Adds an block with the received data.  */
+                        blockchain.addBlock(privateKeySignedBlock + ":" + patientPublicKey + ":" + encryptedAesKeyIV + ":"
+                                + encryptedJournalData);
+                        System.out.println("Added new block");
+                    } else{
+                        bufferedWriter.write(0); // Signature could not be verified, so do not create block
                     }
-
-
-                    String blockId = "";
-
-                    try
-                    {
-                        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-
-                        if (latestPatientBlockId.equals(""))
-                        {
-                            blockId = Base64.getEncoder().encodeToString(digest.digest(patientPublicKey.getBytes()));
-                        }
-                        else
-                        {
-                            blockId = Base64.getEncoder().encodeToString(digest.digest((latestPatientBlockId+patientPublicKey).getBytes()));
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        System.out.println(e.getMessage());
-                        bufferedWriter.write(0);
-                    }
-
-
-                    Block block = new Block();
-                    block.id = blockId;
-                    block.publicKey = patientPublicKey;
-                    block.encryptedAesKey = encryptedAesKeyIV;
-                    block.encryptedData = encryptedJournalData;
-
-                    Blockchain.getBlockChain().add(block);
-                    System.out.println("Succesfully added block");
-
-                    bufferedWriter.write(1);
-                    bufferedWriter.write(blockId);
-                    bufferedWriter.newLine();
-                    bufferedWriter.flush();
                     break;
 
                 default:

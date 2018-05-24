@@ -1,11 +1,17 @@
+import org.apache.commons.codec.binary.Base64;
+
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyFactory;
+import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
+import java.util.stream.Collectors;
 
 class Blockchain
 {
@@ -13,12 +19,7 @@ class Blockchain
     private static BufferedReader blockchainReader;
     private static FileWriter blockchainWriter;
     private static String blockchainFile = "blockchain";
-    private static List<PublicKey> publicKeyList = new ArrayList<>();
-
-    public static List<PublicKey> getPublicKeyList()
-    {
-        return publicKeyList;
-    }
+    private static String acceptedPublicKeysFile = "acceptedClientsPublicKeys\\publicKeyList.txt";
 
     public static List<Block> getBlockChain()
     {
@@ -43,7 +44,7 @@ class Blockchain
 
                 Block block = new Block();
                 block.id = splitLinesList.get(0);
-                block.publicKey = splitLinesList.get(1);
+                block.patientPublicKey = splitLinesList.get(1);
                 block.encryptedAesKey = splitLinesList.get(2);
                 block.encryptedData = splitLinesList.get(3);
 
@@ -66,12 +67,35 @@ class Blockchain
         try
         {
             blockchainWriter = new FileWriter(blockchainFile,true); //the true will append the new data
-            blockchainWriter.write(string + "\n");//appends the string to the file
+            blockchainWriter.write(string);//appends the string to the file
+            /* Adds an newline. System.getPoperty is used, since fileWriter does now support writeNewLine like
+            * buffered writer does. */
+            blockchainWriter.write(System.getProperty( "line.separator" ));
             blockchainWriter.close();
         }
         catch(Exception e)
         {
             System.err.println("Exception: " + e.getMessage());
         }
+    }
+
+    static List<PublicKey> loadAcceptedPublicKeys() {
+        List<PublicKey> publicKeyList = new ArrayList<>();
+        try (BufferedReader bufferedReader = new BufferedReader(Files.newBufferedReader(Paths.get(acceptedPublicKeysFile)))) {
+           String acceptedPublicKeyString;
+           while ((acceptedPublicKeyString = bufferedReader.readLine()) != null)
+            {
+                byte[] decodedPublicKey = Base64.decodeBase64(acceptedPublicKeyString);
+                PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(decodedPublicKey));
+                publicKeyList.add(publicKey);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return publicKeyList;
+    }
+
+    public static void setBlockchainFile(String blockchainFile) {
+        Blockchain.blockchainFile = blockchainFile;
     }
 }
