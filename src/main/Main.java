@@ -25,7 +25,7 @@ public class Main
 
         try
         {
-            SocketConnection socketConnection = new SocketConnection();
+            SocketConnection socketConnection = new SocketConnection(blockchain);
             ServerSocket serverSocket = new ServerSocket(21149);
 
             while (running)

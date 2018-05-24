@@ -26,6 +26,11 @@ public class SocketConnection
     private BufferedReader bufferedReader = null;
     private Blockchain blockchain;
 
+    public SocketConnection(Blockchain blockchain)
+    {
+        this.blockchain = blockchain;
+    }
+
     public void handleConnection(Socket socket)
     {
         System.out.println("Connection received!");
@@ -35,7 +40,6 @@ public class SocketConnection
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             final int opcode = bufferedReader.read();
-            blockchain = new Blockchain();
 
             System.out.println("Opcode: " + opcode);
 
@@ -74,6 +78,7 @@ public class SocketConnection
             if (blockData.getPatientPublicKey().equals(publicKey))
                 blockDataList.add(blockData);
         }
+
 
         /* Sends the list of blocks that corresponds to the received public key back to the client */
         bufferedWriter.write(blockDataList.size());
