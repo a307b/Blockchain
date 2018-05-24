@@ -32,9 +32,9 @@ public class SocketConnection
         try
         {
 
-            final int opcode = bufferedReader.read();
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            final int opcode = bufferedReader.read();
             blockchain = new Blockchain();
 
             System.out.println("Opcode: " + opcode);
