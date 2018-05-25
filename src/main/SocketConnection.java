@@ -69,7 +69,6 @@ public class SocketConnection
 
     private void handleListJournals() throws IOException
     {
-
         String publicKey = bufferedReader.readLine();
 
         List<BlockData> blockDataList = new ArrayList<>();
@@ -80,7 +79,6 @@ public class SocketConnection
             if (blockData.getPatientPublicKey().equals(publicKey))
                 blockDataList.add(blockData);
         }
-
 
         /* Sends the list of blocks that corresponds to the received public key back to the client */
         bufferedWriter.write(blockDataList.size());
@@ -112,7 +110,8 @@ public class SocketConnection
         String journalBlockID = "";
         for (int i = 0; i < blockchain.getBlockDataChain().size(); i++)
         {
-            if (blockchain.getBlockDataChain().get(i).getPatientPublicKey().equals(patientPublicKey)) {
+            if (blockchain.getBlockDataChain().get(i).getPatientPublicKey().equals(patientPublicKey))
+            {
                 journalBlockID = blockchain.getBlockDataChain().get(i).getId();
                 System.out.println("The user had an previous block. ");
                 System.out.println("Last block ID: " + blockchain.getBlockDataChain().get(i).getId());
@@ -160,5 +159,4 @@ public class SocketConnection
         else
             bufferedWriter.write(0); // Signature could not be verified, do not create block and callback to client that it failed
     }
-
 }
