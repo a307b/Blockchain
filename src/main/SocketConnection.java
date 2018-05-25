@@ -47,12 +47,14 @@ public class SocketConnection
             {
                 /* Request for blockchain data. Sends back blocks from the blockchain. */
                 case 0:
-                    receivedUpcode0();
+                    handleListJournals();
                     break;
+
                 /* Receive journal data and add it to the blockchain */
                 case 1:
-                    receivedUpcode1();
+                    handleAddJournal();
                     break;
+
                 default:
                     System.out.println("Wrong opcode - Closing Connection");
                     socket.close();
@@ -65,7 +67,7 @@ public class SocketConnection
         }
     }
 
-    private void receivedUpcode0() throws IOException
+    private void handleListJournals() throws IOException
     {
 
         String publicKey = bufferedReader.readLine();
@@ -99,7 +101,7 @@ public class SocketConnection
         bufferedWriter.flush();
     }
 
-    private void receivedUpcode1() throws IOException
+    private void handleAddJournal() throws IOException
     {
         String privateKeySignedBlock = bufferedReader.readLine();
         String patientPublicKey = bufferedReader.readLine();
@@ -117,7 +119,7 @@ public class SocketConnection
             }
         }
 
-        byte[] contentToBeSigned = null;
+        byte[] dataToBeVerified;
 
         boolean verified = false;
 
@@ -127,24 +129,19 @@ public class SocketConnection
             // will not be created
             for (PublicKey acceptedPublicKey : blockchain.loadAcceptedPublicKeys())
             {
-                Signature signWithPublicKey = Signature.getInstance("SHA256WithRSA");
-                signWithPublicKey.initVerify(acceptedPublicKey);
+                Signature signature = Signature.getInstance("SHA256WithRSA");
+                signature.initVerify(acceptedPublicKey);
 
                 /* If the patient had no previous blocks sign the patients public key.
                  * If the patient had previous blocks sign the public key + previous block
                  * journalBlockID. */
 
-                if (journalBlockID == null) {
-                    contentToBeSigned = patientPublicKey.getBytes();
-                }
-                else {
-                    contentToBeSigned = (journalBlockID + patientPublicKey).getBytes();
-                }
+                dataToBeVerified = (journalBlockID + patientPublicKey).getBytes();
 
-                signWithPublicKey.update(contentToBeSigned);
-                verified = signWithPublicKey.verify(Base64.decodeBase64(privateKeySignedBlock));
+                signature.update(dataToBeVerified);
+                verified = signature.verify(Base64.decodeBase64(privateKeySignedBlock));
 
-                if (verified) // Public key was found, stop iteration
+                if (verified) // Correct public key was found, stop iteration
                     break;
             }
         }
@@ -154,16 +151,14 @@ public class SocketConnection
             bufferedWriter.write(0);
         }
 
-        System.out.println("Verfied: " + verified);
-
-        if(verified) {
+        if (verified)
+        {
             /* Adds an block with the received data.  */
-            blockchain.addBlock(privateKeySignedBlock + ":" + patientPublicKey + ":" + encryptedAesKeyIV + ":"
-                    + encryptedJournalData);
+            blockchain.addBlock(privateKeySignedBlock + ":" + patientPublicKey + ":" + encryptedAesKeyIV + ":"  + encryptedJournalData);
             System.out.println("Added new block");
-        } else{
-            bufferedWriter.write(0); // Signature could not be verified, so do not create block
         }
+        else
+            bufferedWriter.write(0); // Signature could not be verified, do not create block and callback to client that it failed
     }
 
 }
